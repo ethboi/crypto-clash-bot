@@ -1,0 +1,40 @@
+{
+  "name": "crypto-clash-bot",
+  "version": "1.0.0",
+  "description": "Crypto Clash Discord Bot System",
+  "main": "build/app.js",
+  "author": "Crypto Clash",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --files --respawn src/app.ts",
+    "clean": "rimraf ./build",
+    "build": "npm run clean && tsc",
+    "start": "node build/app.js",
+    "deploy-commands": "ts-node src/deploy-commands.ts",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^25.2.0",
+    "@types/node-schedule": "^2.1.8",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3",
+    "rimraf": "^6.1.2"
+  },
+  "dependencies": {
+    "axios": "^1.13.4",
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.2.3",
+    "lodash": "^4.17.23",
+    "node-schedule": "^2.1.1",
+    "ts-node": "^10.9.2"
+  }
+}
