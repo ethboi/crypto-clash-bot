@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { COINGECKO_IDS } from '../config/bots'
+import { OPENSEA_API_KEY } from '../config'
 
 export interface PriceData {
   symbol: string
@@ -17,11 +18,34 @@ export interface CoinGeckoPriceResponse {
   [key: string]: CoinGeckoPrice
 }
 
+export interface DexScreenerPair {
+  priceUsd: string
+  priceChange: {
+    h24: number
+  }
+  baseToken: {
+    symbol: string
+  }
+}
+
+export interface DexScreenerResponse {
+  pairs: DexScreenerPair[] | null
+}
+
+export interface OpenSeaCollectionStats {
+  total: {
+    floor_price: number
+    floor_price_symbol: string
+  }
+}
+
 class PriceService {
   private cache: Map<string, PriceData> = new Map()
   private readonly CACHE_TTL_MS = 30000 // 30 seconds
 
   private readonly coinGeckoUrl = 'https://api.coingecko.com/api/v3/simple/price'
+  private readonly dexScreenerUrl = 'https://api.dexscreener.com/latest/dex/pairs'
+  private readonly openSeaUrl = 'https://api.opensea.io/api/v2/collections'
 
   async fetchPrice(coinGeckoId: string, symbol: string): Promise<PriceData | null> {
     try {
@@ -90,6 +114,65 @@ class PriceService {
     } catch (error) {
       console.error('Error fetching all prices:', error)
       return this.cache
+    }
+  }
+
+  async fetchDexScreenerPrice(chain: string, pairAddress: string, symbol: string): Promise<PriceData | null> {
+    try {
+      const response = await axios.get<DexScreenerResponse>(`${this.dexScreenerUrl}/${chain}/${pairAddress}`)
+
+      const pair = response.data.pairs?.[0]
+      if (!pair) {
+        console.error(`No pair data for ${chain}/${pairAddress}`)
+        return null
+      }
+
+      const priceData: PriceData = {
+        symbol: symbol.toUpperCase(),
+        price: parseFloat(pair.priceUsd),
+        change24h: pair.priceChange?.h24 || 0,
+        lastUpdated: new Date(),
+      }
+
+      this.cache.set(symbol.toUpperCase(), priceData)
+      return priceData
+    } catch (error) {
+      console.error(`Error fetching DexScreener price for ${symbol}:`, error instanceof Error ? error.message : error)
+      return this.cache.get(symbol.toUpperCase()) || null
+    }
+  }
+
+  async fetchOpenSeaFloorPrice(collectionSlug: string, symbol: string): Promise<PriceData | null> {
+    if (!OPENSEA_API_KEY) {
+      console.error(`No OpenSea API key configured`)
+      return this.cache.get(symbol.toUpperCase()) || null
+    }
+
+    try {
+      const response = await axios.get<OpenSeaCollectionStats>(`${this.openSeaUrl}/${collectionSlug}/stats`, {
+        headers: {
+          'x-api-key': OPENSEA_API_KEY,
+        },
+      })
+
+      const floorPrice = response.data.total?.floor_price
+      if (floorPrice === undefined) {
+        console.error(`No floor price for collection ${collectionSlug}`)
+        return null
+      }
+
+      const priceData: PriceData = {
+        symbol: symbol.toUpperCase(),
+        price: floorPrice,
+        change24h: 0, // OpenSea doesn't provide 24h change for floor price
+        lastUpdated: new Date(),
+      }
+
+      this.cache.set(symbol.toUpperCase(), priceData)
+      return priceData
+    } catch (error) {
+      console.error(`Error fetching OpenSea floor price for ${symbol}:`, error instanceof Error ? error.message : error)
+      return this.cache.get(symbol.toUpperCase()) || null
     }
   }
 

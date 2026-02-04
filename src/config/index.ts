@@ -14,6 +14,10 @@ export const DISCORD_TOKEN_HYPE = _.defaultTo(process.env.DISCORD_TOKEN_HYPE, ''
 // Main Bots
 export const DISCORD_TOKEN_CLASH = _.defaultTo(process.env.DISCORD_TOKEN_CLASH, '')
 export const DISCORD_TOKEN_TOURNAMENT = _.defaultTo(process.env.DISCORD_TOKEN_TOURNAMENT, '')
+export const DISCORD_TOKEN_PATRON = _.defaultTo(process.env.DISCORD_TOKEN_PATRON, '')
+
+// API Keys
+export const OPENSEA_API_KEY = _.defaultTo(process.env.OPENSEA_API_KEY, '')
 
 // Leaderboard Configuration
 export const LEADERBOARD_CHANNEL = _.defaultTo(process.env.LEADERBOARD_CHANNEL, 'leaderboard')

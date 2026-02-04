@@ -8,7 +8,9 @@ export interface ManagedBotConfig {
   type: BotType
   asset?: string
   coinGeckoId?: string
-  dexScreenerAddress?: string
+  dexScreenerChain?: string
+  dexScreenerPair?: string
+  openSeaCollection?: string
 }
 
 export class ManagedBot {
@@ -16,7 +18,9 @@ export class ManagedBot {
   public readonly type: BotType
   public readonly asset?: string
   public readonly coinGeckoId?: string
-  public readonly dexScreenerAddress?: string
+  public readonly dexScreenerChain?: string
+  public readonly dexScreenerPair?: string
+  public readonly openSeaCollection?: string
 
   private readonly token: string
   private client: Client | null = null
@@ -28,7 +32,9 @@ export class ManagedBot {
     this.type = config.type
     this.asset = config.asset
     this.coinGeckoId = config.coinGeckoId
-    this.dexScreenerAddress = config.dexScreenerAddress
+    this.dexScreenerChain = config.dexScreenerChain
+    this.dexScreenerPair = config.dexScreenerPair
+    this.openSeaCollection = config.openSeaCollection
   }
 
   public getClient(): Client {
@@ -107,6 +113,16 @@ export class ManagedBot {
     const direction = change24h >= 0 ? '↗' : '↘'
     const nickname = `${this.asset.toUpperCase()} $${price} (${direction})`
     const activity = `24h: ${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`
+
+    await this.setNickname(nickname)
+    this.setActivity(activity)
+  }
+
+  public async updateFloorPriceDisplay(floorPrice: number): Promise<void> {
+    if (this.type !== 'price' || !this.asset) return
+
+    const nickname = `${this.asset.toUpperCase()} ${floorPrice} ETH`
+    const activity = `NFT Floor Price`
 
     await this.setNickname(nickname)
     this.setActivity(activity)

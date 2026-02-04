@@ -53,16 +53,27 @@ export class BotManager {
 
   public async startAll(): Promise<void> {
     console.log('Starting all bots...')
-    const startPromises: Promise<void>[] = []
+    const results: { name: string; success: boolean; error?: Error }[] = []
 
     for (const bot of this.bots.values()) {
-      if (bot.hasToken()) {
-        startPromises.push(bot.start())
+      if (!bot.hasToken()) {
+        console.log(`Skipping ${bot.name} bot - no token provided`)
+        results.push({ name: bot.name, success: false })
+        continue
+      }
+
+      try {
+        await bot.start()
+        results.push({ name: bot.name, success: true })
+      } catch (error) {
+        console.error(`Failed to start ${bot.name} bot:`, error instanceof Error ? error.message : error)
+        results.push({ name: bot.name, success: false, error: error instanceof Error ? error : new Error(String(error)) })
       }
     }
 
-    await Promise.all(startPromises)
-    console.log(`Started ${startPromises.length} bots`)
+    const successful = results.filter(r => r.success).length
+    const failed = results.filter(r => !r.success).length
+    console.log(`Bot startup complete: ${successful} started, ${failed} skipped/failed`)
   }
 
   public async startBot(name: string): Promise<void> {

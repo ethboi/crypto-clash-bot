@@ -21,8 +21,14 @@ export async function setupBot(bot: ManagedBot): Promise<void> {
 
 export async function setupAllBots(bots: ManagedBot[]): Promise<void> {
   for (const bot of bots) {
-    if (bot.isOnline()) {
+    if (!bot.isOnline()) {
+      continue
+    }
+
+    try {
       await setupBot(bot)
+    } catch (error) {
+      console.error(`Failed to setup ${bot.name} bot:`, error instanceof Error ? error.message : error)
     }
   }
 }

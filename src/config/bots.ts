@@ -7,6 +7,7 @@ import {
   DISCORD_TOKEN_HYPE,
   DISCORD_TOKEN_CLASH,
   DISCORD_TOKEN_TOURNAMENT,
+  DISCORD_TOKEN_PATRON,
 } from './index'
 
 // CoinGecko IDs for price fetching
@@ -57,11 +58,14 @@ export const BOT_CONFIGS: ManagedBotConfig[] = [
     coinGeckoId: COINGECKO_IDS.HYPE,
   },
 
-  // Main Bot
+  // CLASH Price Bot (DexScreener)
   {
     name: 'CLASH',
     token: DISCORD_TOKEN_CLASH,
-    type: 'main',
+    type: 'price',
+    asset: 'clash',
+    dexScreenerChain: 'ink',
+    dexScreenerPair: '0x4af0ebea525f9006852918d92bf3749ef86cb514',
   },
 
   // Tournament Bot
@@ -69,6 +73,15 @@ export const BOT_CONFIGS: ManagedBotConfig[] = [
     name: 'TOURNAMENT',
     token: DISCORD_TOKEN_TOURNAMENT,
     type: 'tournament',
+  },
+
+  // Patron Floor Price Bot (OpenSea)
+  {
+    name: 'PATRON',
+    token: DISCORD_TOKEN_PATRON,
+    type: 'price',
+    asset: 'patron',
+    openSeaCollection: 'crypto-clash-patrons',
   },
 ]
 
