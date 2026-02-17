@@ -15,10 +15,8 @@ import {
   PINNED_LEADERBOARD_UPDATE_MINUTES,
 } from '../config'
 
-// Track which tournaments we've already posted results/announcements for
+// Track which tournaments we've already posted results for (in-memory, acceptable for results)
 const postedResults = new Set<string>()
-const announcedTournaments = new Set<string>()
-const announcedLocks = new Set<string>()
 
 // Track pinned leaderboard message ID per channel
 let pinnedMessageId: string | null = null
@@ -150,11 +148,15 @@ async function checkForNewTournaments(client: Client): Promise<void> {
   if (!TOURNAMENT_ANNOUNCE_CHANNEL_ID) return
 
   try {
+    const { getDb } = await import('../services/db')
+    const db = await getDb()
     const tournaments = await tournamentReportService.getUpcomingTournaments()
 
     for (const tournament of tournaments) {
       const tid = tournament._id!.toString()
-      if (announcedTournaments.has(tid)) continue
+
+      // Check DB flag to survive restarts
+      if ((tournament as any).announcedCreation) continue
 
       const participantCount = await tournamentReportService.getParticipantCount(tid)
       const embed = TournamentCreatedEmbed(tournament, participantCount)
@@ -165,7 +167,12 @@ async function checkForNewTournaments(client: Client): Promise<void> {
         console.log(`[TournamentSchedule] Announced new tournament: ${tournament.name}`)
       }
 
-      announcedTournaments.add(tid)
+      // Mark as announced in DB
+      const { ObjectId } = await import('mongodb')
+      await db.collection('tournaments').updateOne(
+        { _id: new ObjectId(tid) },
+        { $set: { announcedCreation: true } }
+      )
     }
   } catch (error) {
     console.error('[TournamentSchedule] Error checking new tournaments:', error)
@@ -176,11 +183,15 @@ async function checkForLockedTournaments(client: Client): Promise<void> {
   if (!TOURNAMENT_ANNOUNCE_CHANNEL_ID) return
 
   try {
+    const { getDb } = await import('../services/db')
+    const db = await getDb()
     const tournament = await tournamentReportService.getActiveTournament()
     if (!tournament) return
 
     const tid = tournament._id!.toString()
-    if (announcedLocks.has(tid)) return
+
+    // Check DB flag to survive restarts
+    if ((tournament as any).announcedLock) return
 
     const now = new Date()
     const lockDate = new Date(tournament.lockDate)
@@ -195,7 +206,12 @@ async function checkForLockedTournaments(client: Client): Promise<void> {
       console.log(`[TournamentSchedule] Announced lock for: ${tournament.name}`)
     }
 
-    announcedLocks.add(tid)
+    // Mark as announced in DB
+    const { ObjectId } = await import('mongodb')
+    await db.collection('tournaments').updateOne(
+      { _id: new ObjectId(tid) },
+      { $set: { announcedLock: true } }
+    )
   } catch (error) {
     console.error('[TournamentSchedule] Error checking locked tournaments:', error)
   }
