@@ -4,7 +4,6 @@ import { BRAND, COLORS, ASSET_COLORS, URLS, EMOJIS, getMedalEmoji, getAssetColor
 export function Footer(embed: EmbedBuilder): EmbedBuilder {
   return embed
     .setFooter({
-      iconURL: URLS.ICON,
       text: BRAND.NAME,
     })
     .setTimestamp()

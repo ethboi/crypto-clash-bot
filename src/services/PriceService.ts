@@ -123,7 +123,6 @@ class PriceService {
 
       const pair = response.data.pairs?.[0]
       if (!pair) {
-        console.error(`No pair data for ${chain}/${pairAddress}`)
         return null
       }
 

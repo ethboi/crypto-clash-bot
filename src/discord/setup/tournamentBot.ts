@@ -1,5 +1,14 @@
-import { Client } from 'discord.js'
+import { Client, ChatInputCommandInteraction } from 'discord.js'
 import { ManagedBot } from '../../core/ManagedBot'
+import {
+  handleStandings,
+  handleTournament,
+  handleResults,
+  handlePrizes,
+  handleMyStats,
+} from '../handlers/tournament'
+import { startTournamentSchedule } from '../../schedule/tournamentSchedule'
+import { connectDb } from '../../services/db'
 
 export async function setupTournamentBot(bot: ManagedBot): Promise<void> {
   if (bot.type !== 'tournament') {
@@ -8,13 +17,28 @@ export async function setupTournamentBot(bot: ManagedBot): Promise<void> {
   }
 
   const client = bot.getClient()
+
+  // Connect to MongoDB
+  try {
+    await connectDb()
+    console.log(`[${bot.name}] MongoDB connected for tournament reports`)
+  } catch (error) {
+    console.error(`[${bot.name}] Failed to connect to MongoDB:`, error)
+    return
+  }
+
+  // Setup slash command handlers
   setupTournamentCommands(client, bot.name)
+
+  // Start scheduled posts
+  startTournamentSchedule(client)
+
   console.log(`[${bot.name}] Tournament bot setup complete`)
 }
 
 export function setupTournamentCommands(client: Client, botName: string): void {
   client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isCommand()) {
+    if (!interaction.isChatInputCommand()) {
       return
     }
 
@@ -23,19 +47,21 @@ export function setupTournamentCommands(client: Client, botName: string): void {
     try {
       switch (commandName) {
         case 'tournament':
-          // TODO: Implement tournament command
-          await interaction.reply('Tournament functionality coming soon!')
-          break
-        case 'register':
-          // TODO: Implement registration command
-          await interaction.reply('Tournament registration coming soon!')
+          await handleTournament(interaction)
           break
         case 'standings':
-          // TODO: Implement standings command
-          await interaction.reply('Tournament standings coming soon!')
+          await handleStandings(interaction)
+          break
+        case 'results':
+          await handleResults(interaction)
+          break
+        case 'prizes':
+          await handlePrizes(interaction)
+          break
+        case 'mystats':
+          await handleMyStats(interaction)
           break
         default:
-          // Ignore other commands - they may be for other bots
           break
       }
     } catch (error) {
