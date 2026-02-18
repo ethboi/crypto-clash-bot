@@ -99,6 +99,9 @@ Join now 👉 cryptoclash.ink`
 
 export async function tweetTournamentLocked(tournament: Tournament, participantCount: number): Promise<void> {
   const weekNum = tournament.weekNumber || '?'
+  const end = new Date(tournament.endDate)
+  const start = new Date(tournament.startDate)
+  const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
 
   const text = `🔒 Cards are locked for Weekly Tournament #${weekNum}!
 
@@ -106,7 +109,16 @@ ${participantCount} players have entered. The battle begins now ⚔️
 
 Who will climb the ranks? Follow the action at cryptoclash.ink`
 
-  const postId = await createPost(text)
+  const imageUrl = buildCcCardUrl({
+    title: 'Cards Locked! ⚔️',
+    subtitle: 'THE BATTLE BEGINS',
+    s1l: 'PLAYERS', s1v: String(participantCount),
+    s2l: 'TOURNAMENT', s2v: `Week ${weekNum}`,
+    s3l: 'DURATION', s3v: `${days} Days`,
+    footer: 'CRYPTOCLASH.INK',
+  })
+
+  const postId = await createPost(text, imageUrl)
   if (postId) await publishPost(postId)
 }
 
@@ -124,6 +136,18 @@ Congrats to all winners! Prizes incoming 🎁
 
 Next tournament coming soon. Build your deck 👉 cryptoclash.ink`
 
-  const postId = await createPost(text)
+  const imageParams: Record<string, string> = {
+    title: `Tournament #${weekNum} Results 🏆`,
+    subtitle: 'FINAL STANDINGS',
+    footer: 'CRYPTOCLASH.INK',
+  }
+
+  if (topPlayers.length >= 1) { imageParams.s1l = '🥇 1ST'; imageParams.s1v = topPlayers[0].name }
+  if (topPlayers.length >= 2) { imageParams.s2l = '🥈 2ND'; imageParams.s2v = topPlayers[1].name }
+  if (topPlayers.length >= 3) { imageParams.s3l = '🥉 3RD'; imageParams.s3v = topPlayers[2].name }
+
+  const imageUrl = buildCcCardUrl(imageParams)
+
+  const postId = await createPost(text, imageUrl)
   if (postId) await publishPost(postId)
 }
