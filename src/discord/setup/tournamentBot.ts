@@ -10,6 +10,7 @@ import {
 import { startTournamentSchedule } from '../../schedule/tournamentSchedule'
 import { connectDb } from '../../services/db'
 import { setDiscordClient } from '../../services/PopchingService'
+import { startTweetMirror } from '../../services/TweetMirrorService'
 
 export async function setupTournamentBot(bot: ManagedBot): Promise<void> {
   if (bot.type !== 'tournament') {
@@ -36,6 +37,9 @@ export async function setupTournamentBot(bot: ManagedBot): Promise<void> {
 
   // Start scheduled posts
   startTournamentSchedule(client)
+
+  // Start tweet mirror (polls X API for all tweets)
+  startTweetMirror(client)
 
   console.log(`[${bot.name}] Tournament bot setup complete`)
 }
