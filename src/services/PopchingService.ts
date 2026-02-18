@@ -110,11 +110,13 @@ ${participantCount} players have entered. The battle begins now ⚔️
 Who will climb the ranks? Follow the action at cryptoclash.ink`
 
   const imageUrl = buildCcCardUrl({
-    title: 'Cards Locked! ⚔️',
+    title: '🔒 Cards Locked!',
     subtitle: 'THE BATTLE BEGINS',
     s1l: 'PLAYERS', s1v: String(participantCount),
     s2l: 'TOURNAMENT', s2v: `Week ${weekNum}`,
     s3l: 'DURATION', s3v: `${days} Days`,
+    p1: 'AI Agent Players Coming Soon',
+    p1i: '🤖',
     footer: 'CRYPTOCLASH.INK',
   })
 
@@ -124,15 +126,23 @@ Who will climb the ranks? Follow the action at cryptoclash.ink`
 
 export async function tweetTournamentResults(tournament: Tournament, topPlayers: { name: string; score: number }[]): Promise<void> {
   const weekNum = tournament.weekNumber || '?'
+  const prizes = tournament.prizes || []
+
+  const getPrize = (pos: number) => prizes.find(p => p.position === pos)
 
   let resultsText = ''
   if (topPlayers.length >= 3) {
-    resultsText = `\n\n🥇 ${topPlayers[0].name}\n🥈 ${topPlayers[1].name}\n🥉 ${topPlayers[2].name}`
+    const p1 = getPrize(1)
+    const p2 = getPrize(2)
+    const p3 = getPrize(3)
+    resultsText = `\n\n🥇 ${topPlayers[0].name}${p1 ? ` — ${p1.patronNFTs} NFTs + ${(p1.clashTokens/1000).toFixed(0)}K $CLASH` : ''}`
+    resultsText += `\n🥈 ${topPlayers[1].name}${p2 ? ` — ${p2.patronNFTs} NFTs + ${(p2.clashTokens/1000).toFixed(0)}K $CLASH` : ''}`
+    resultsText += `\n🥉 ${topPlayers[2].name}${p3 ? ` — ${p3.patronNFTs} NFT + ${(p3.clashTokens/1000).toFixed(0)}K $CLASH` : ''}`
   }
 
   const text = `🏆 Weekly Tournament #${weekNum} is over!${resultsText}
 
-Congrats to all winners! Prizes incoming 🎁
+4th-50th also received $CLASH 🎁
 
 Next tournament coming soon. Build your deck 👉 cryptoclash.ink`
 
@@ -142,9 +152,14 @@ Next tournament coming soon. Build your deck 👉 cryptoclash.ink`
     footer: 'CRYPTOCLASH.INK',
   }
 
+  const p1 = getPrize(1)
+  const p2 = getPrize(2)
+  const p3 = getPrize(3)
   if (topPlayers.length >= 1) { imageParams.s1l = '🥇 1ST'; imageParams.s1v = topPlayers[0].name }
   if (topPlayers.length >= 2) { imageParams.s2l = '🥈 2ND'; imageParams.s2v = topPlayers[1].name }
   if (topPlayers.length >= 3) { imageParams.s3l = '🥉 3RD'; imageParams.s3v = topPlayers[2].name }
+  imageParams.p1 = p1 ? `${p1.patronNFTs} NFTs + ${(p1.clashTokens/1000).toFixed(0)}K $CLASH to 1st` : 'Patron NFTs for Top 3'
+  imageParams.p2 = '$CLASH tokens for Top 50'
 
   const imageUrl = buildCcCardUrl(imageParams)
 
