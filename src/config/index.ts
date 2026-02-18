@@ -36,6 +36,7 @@ export const MONGO_DB = _.defaultTo(process.env.MONGO_DB, '')
 export const TOURNAMENT_STANDINGS_CHANNEL_ID = _.defaultTo(process.env.TOURNAMENT_STANDINGS_CHANNEL_ID, '')
 export const TOURNAMENT_RESULTS_CHANNEL_ID = _.defaultTo(process.env.TOURNAMENT_RESULTS_CHANNEL_ID, '')
 export const TOURNAMENT_ANNOUNCE_CHANNEL_ID = _.defaultTo(process.env.TOURNAMENT_ANNOUNCE_CHANNEL_ID, '')
+export const TWEET_MIRROR_CHANNEL_ID = _.defaultTo(process.env.TWEET_MIRROR_CHANNEL_ID, '')
 export const CRYPTO_CLASH_URL = _.defaultTo(process.env.CRYPTO_CLASH_URL, 'https://cryptoclash.me')
 
 // Pinned Leaderboard

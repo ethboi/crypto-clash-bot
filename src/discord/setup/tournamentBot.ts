@@ -9,6 +9,7 @@ import {
 } from '../handlers/tournament'
 import { startTournamentSchedule } from '../../schedule/tournamentSchedule'
 import { connectDb } from '../../services/db'
+import { setDiscordClient } from '../../services/PopchingService'
 
 export async function setupTournamentBot(bot: ManagedBot): Promise<void> {
   if (bot.type !== 'tournament') {
@@ -29,6 +30,9 @@ export async function setupTournamentBot(bot: ManagedBot): Promise<void> {
 
   // Setup slash command handlers
   setupTournamentCommands(client, bot.name)
+
+  // Pass Discord client to Popching service for tweet mirroring
+  setDiscordClient(client)
 
   // Start scheduled posts
   startTournamentSchedule(client)
