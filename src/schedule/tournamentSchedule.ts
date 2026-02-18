@@ -14,6 +14,7 @@ import {
   TOURNAMENT_ANNOUNCE_CHANNEL_ID,
   PINNED_LEADERBOARD_UPDATE_MINUTES,
 } from '../config'
+import { tweetNewTournament, tweetTournamentLocked, tweetTournamentResults } from '../services/PopchingService'
 
 // Track which tournaments we've already posted results for (in-memory, acceptable for results)
 const postedResults = new Set<string>()
@@ -167,6 +168,14 @@ async function checkForNewTournaments(client: Client): Promise<void> {
         console.log(`[TournamentSchedule] Announced new tournament: ${tournament.name}`)
       }
 
+      // Tweet via Popching
+      try {
+        await tweetNewTournament(tournament)
+        console.log(`[TournamentSchedule] Tweeted new tournament: ${tournament.name}`)
+      } catch (e) {
+        console.error('[TournamentSchedule] Failed to tweet new tournament:', e)
+      }
+
       // Mark as announced in DB
       const { ObjectId } = await import('mongodb')
       await db.collection('tournaments').updateOne(
@@ -204,6 +213,14 @@ async function checkForLockedTournaments(client: Client): Promise<void> {
     if (channel) {
       await channel.send({ embeds: [embed] })
       console.log(`[TournamentSchedule] Announced lock for: ${tournament.name}`)
+    }
+
+    // Tweet via Popching
+    try {
+      await tweetTournamentLocked(tournament, participantCount)
+      console.log(`[TournamentSchedule] Tweeted lock for: ${tournament.name}`)
+    } catch (e) {
+      console.error('[TournamentSchedule] Failed to tweet lock:', e)
     }
 
     // Mark as announced in DB
@@ -246,6 +263,18 @@ async function checkForFinalizedResults(client: Client): Promise<void> {
           const announceEmbed = TournamentFinalizedEmbed(tournament)
           await announceChannel.send({ embeds: [announceEmbed] })
         }
+      }
+
+      // Tweet results via Popching
+      try {
+        const topPlayers = results.slice(0, 3).map(r => ({
+          name: r.playerName || r.userId?.slice(0, 8) || 'Unknown',
+          score: r.finalScore || 0,
+        }))
+        await tweetTournamentResults(tournament, topPlayers)
+        console.log(`[TournamentSchedule] Tweeted results for: ${tournament.name}`)
+      } catch (e) {
+        console.error('[TournamentSchedule] Failed to tweet results:', e)
       }
 
       postedResults.add(tid)
