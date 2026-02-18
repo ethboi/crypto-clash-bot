@@ -9,7 +9,7 @@ const ACCESS_TOKEN = process.env.TWITTER_ACCESS_TOKEN || ''
 const ACCESS_SECRET = process.env.TWITTER_ACCESS_SECRET || ''
 const TWITTER_USER_ID = process.env.TWITTER_USER_ID || ''
 const TWITTER_HANDLE = 'CryptoClash_ink'
-const POLL_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+const POLL_INTERVAL_MS = 60 * 60 * 1000 // 1 hour
 
 let lastTweetId: string | null = null
 
