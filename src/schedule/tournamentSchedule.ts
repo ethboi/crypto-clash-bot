@@ -15,6 +15,7 @@ import {
   PINNED_LEADERBOARD_UPDATE_MINUTES,
 } from '../config'
 import { tweetNewTournament, tweetTournamentLocked, tweetTournamentResults } from '../services/PopchingService'
+import { telegramNewTournament, telegramTournamentLocked, telegramTournamentResults } from '../services/TelegramService'
 
 // Track which tournaments we've already posted results for (in-memory, acceptable for results)
 const postedResults = new Set<string>()
@@ -176,6 +177,13 @@ async function checkForNewTournaments(client: Client): Promise<void> {
         console.error('[TournamentSchedule] Failed to tweet new tournament:', e)
       }
 
+      // Telegram
+      try {
+        await telegramNewTournament(tournament)
+      } catch (e) {
+        console.error('[TournamentSchedule] Failed to send Telegram new tournament:', e)
+      }
+
       // Mark as announced in DB
       const { ObjectId } = await import('mongodb')
       await db.collection('tournaments').updateOne(
@@ -223,6 +231,13 @@ async function checkForLockedTournaments(client: Client): Promise<void> {
       console.error('[TournamentSchedule] Failed to tweet lock:', e)
     }
 
+    // Telegram
+    try {
+      await telegramTournamentLocked(tournament, participantCount)
+    } catch (e) {
+      console.error('[TournamentSchedule] Failed to send Telegram lock:', e)
+    }
+
     // Mark as announced in DB
     const { ObjectId } = await import('mongodb')
     await db.collection('tournaments').updateOne(
@@ -266,15 +281,22 @@ async function checkForFinalizedResults(client: Client): Promise<void> {
       }
 
       // Tweet results via Popching
+      const topPlayers = results.slice(0, 3).map(r => ({
+        name: r.playerName || r.userId?.slice(0, 8) || 'Unknown',
+        score: r.finalScore || 0,
+      }))
       try {
-        const topPlayers = results.slice(0, 3).map(r => ({
-          name: r.playerName || r.userId?.slice(0, 8) || 'Unknown',
-          score: r.finalScore || 0,
-        }))
         await tweetTournamentResults(tournament, topPlayers)
         console.log(`[TournamentSchedule] Tweeted results for: ${tournament.name}`)
       } catch (e) {
         console.error('[TournamentSchedule] Failed to tweet results:', e)
+      }
+
+      // Telegram
+      try {
+        await telegramTournamentResults(tournament, topPlayers)
+      } catch (e) {
+        console.error('[TournamentSchedule] Failed to send Telegram results:', e)
       }
 
       postedResults.add(tid)
